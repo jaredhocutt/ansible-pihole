@@ -1,0 +1,37 @@
+---
+
+- name: Create Pi-hole config directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+  become: yes
+  loop:
+    - /etc/pihole
+    - /etc/pihole/data
+    - /etc/pihole/dnsmasq.d
+
+- name: Create Pi-hole service
+  copy:
+    src: pihole.service
+    dest: /etc/systemd/system/pihole.service
+    owner: root
+    group: root
+    mode: 0644
+  register: pihole_service
+  become: yes
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  when: pihole_service.changed
+  become: yes
+
+- name: Start and enable Pi-hole service
+  systemd:
+    name: pihole.service
+    state: started
+    enabled: yes
+  become: yes
